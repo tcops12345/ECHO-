@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation ECHO — Case #078</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080C15;--panel:#0F1520;--card:#141928;--card2:#1C2538;--border:#1E2A40;
+  --red:#CC1F1F;--rb:#FF4444;--orange:#E07820;--yellow:#C9981A;
+  --green:#2EA043;--blue:#4A80C4;--white:#FFF;
+  --text:#B0B8C8;--tl:#D8DDE8;--td:#506070;
+  --mono:'Courier New',monospace;--body:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.5;overflow:hidden}
+.app{display:grid;grid-template-rows:54px 1fr;grid-template-columns:210px 340px 1fr;height:100vh}
+/* HEADER */
+.hdr{grid-column:1/-1;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:14px}
+.hdr-badge{font-family:var(--mono);font-size:8px;color:var(--red);letter-spacing:3px;border:1px solid var(--red);padding:3px 7px;flex-shrink:0}
+.hdr-title{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--white);letter-spacing:4px}
+.hdr-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8px;color:var(--red);letter-spacing:2px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.hdr-case{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--td);letter-spacing:2px;white-space:nowrap}
+/* NAV */
+.nav{background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0;grid-row:2}
+.nav-lbl{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--td);padding:10px 14px 4px;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;border-left:3px solid transparent;transition:background .12s;user-select:none}
+.ni:hover{background:var(--card)}
+.ni.active{background:rgba(204,31,31,.12);border-left-color:var(--red)}
+.ni.active .ni-title{color:var(--white)}
+.ni.active .ni-icon{color:var(--red)}
+.ni-icon{font-size:10px;color:var(--td);width:14px;text-align:center;flex-shrink:0}
+.ni-title{font-size:12px;color:var(--text);font-weight:500}
+.ni-count{margin-left:auto;font-family:var(--mono);font-size:8px;color:var(--td);background:var(--card);padding:1px 5px;border-radius:2px}
+/* ITEM LIST */
+.list-panel{border-right:1px solid var(--border);overflow-y:auto;background:var(--bg);grid-row:2}
+.list-hdr{padding:14px 14px 10px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:10}
+.list-hdr-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--white);text-transform:uppercase;margin-bottom:3px}
+.list-hdr-sub{font-size:10px;color:var(--td)}
+.ic{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;border-left:3px solid transparent}
+.ic:hover{background:var(--card)}
+.ic.active{background:var(--card2);border-left-color:var(--red)}
+.ic-row{display:flex;align-items:flex-start;gap:7px;margin-bottom:3px}
+.ic-name{font-size:12.5px;font-weight:600;color:var(--tl);line-height:1.3}
+.ic-desc{font-size:10.5px;color:var(--td);line-height:1.4}
+.ic-meta{font-family:var(--mono);font-size:9px;color:var(--td);margin-top:5px}
+/* TAGS */
+.tag{font-family:var(--mono);font-size:7px;letter-spacing:1.5px;padding:2px 5px;border-radius:2px;text-transform:uppercase;flex-shrink:0;margin-top:2px;white-space:nowrap}
+.t-red{background:rgba(204,31,31,.2);color:var(--rb)}
+.t-orange{background:rgba(224,120,32,.2);color:var(--orange)}
+.t-yellow{background:rgba(201,152,26,.2);color:var(--yellow)}
+.t-green{background:rgba(46,160,67,.2);color:var(--green)}
+.t-blue{background:rgba(74,128,196,.2);color:var(--blue)}
+.t-gray{background:rgba(80,96,112,.2);color:var(--td)}
+/* EVIDENCE PANEL */
+.ev-panel{overflow-y:auto;background:var(--bg);grid-row:2}
+.ev-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px}
+.ev-empty-icon{font-size:28px;color:var(--td);opacity:.3}
+.ev-empty-txt{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--td);opacity:.35;text-transform:uppercase}
+.ev-hdr{padding:18px 22px 14px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:10}
+.ev-eyebrow{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--td);text-transform:uppercase;margin-bottom:5px}
+.ev-title{font-size:17px;font-weight:700;color:var(--white);line-height:1.3}
+.ev-summary{font-size:12px;color:var(--text);margin-top:7px;line-height:1.6}
+.ev-body{padding:18px 22px}
+.ev-sec-lbl{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:10px}
+.ev-item{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:13px 15px;margin-bottom:9px}
+.ev-item-lbl{font-size:12px;font-weight:700;color:var(--tl);margin-bottom:5px}
+.ev-item-detail{font-size:11.5px;color:var(--text);line-height:1.65}
+.ev-item-src{margin-top:9px;padding-top:8px;border-top:1px solid var(--border);font-family:var(--mono);font-size:8px;color:var(--td);line-height:1.5}
+.ev-item-src::before{content:'SOURCE: ';color:var(--red)}
+@keyframes reveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.ev-item{animation:reveal .2s ease both}
+.ev-item:nth-child(2){animation-delay:.05s}
+.ev-item:nth-child(3){animation-delay:.1s}
+.ev-item:nth-child(4){animation-delay:.15s}
+.ev-item:nth-child(5){animation-delay:.2s}
+.ev-item:nth-child(6){animation-delay:.25s}
+.ev-item:nth-child(7){animation-delay:.3s}
+.ev-item:nth-child(8){animation-delay:.35s}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@media(max-width:800px){
+  .app{grid-template-rows:54px 48px auto auto;grid-template-columns:1fr;height:auto;overflow:auto}
+  html,body{overflow:auto}
+  .nav{display:flex;overflow-x:auto;overflow-y:hidden;padding:0;border-right:none;border-bottom:1px solid var(--border);grid-row:2;grid-column:1}
+  .nav-lbl,.ni-count,.ni-icon{display:none}
+  .ni{flex-shrink:0;padding:0 14px;height:48px;border-left:none;border-bottom:2px solid transparent;border-top:none}
+  .ni.active{background:transparent;border-bottom-color:var(--red)}
+  .ni-title{font-size:11px;white-space:nowrap}
+  .list-panel{grid-row:3;grid-column:1;border-right:none;border-bottom:1px solid var(--border);max-height:50vh}
+  .ev-panel{grid-row:4;grid-column:1;min-height:60vh}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="hdr-badge">CLASSIFIED</div>
+    <div class="hdr-title">OPERATION ECHO</div>
+    <div class="hdr-status"><div class="dot"></div>ACTIVE INVESTIGATION</div>
+    <div class="hdr-case">CASE #078 &nbsp;·&nbsp; FIB INTELLIGENCE DIVISION</div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+  <div class="list-panel" id="listPanel"></div>
+  <div class="ev-panel" id="evPanel">
+    <div class="ev-empty"><div class="ev-empty-icon">◎</div><div class="ev-empty-txt">Select an item to view evidence</div></div>
+  </div>
+</div>
+<script>
+const DATA = [
+  {
+    "id": "overview",
+    "title": "Who Is Echo?",
+    "icon": "◉",
+    "desc": "Organisation overview",
+    "items": [
+      {
+        "name": "Methods",
+        "tag": "OPERATIONAL",
+        "tc": "t-blue",
+        "desc": "How Echo operates and delivers its message",
+        "summary": "Echo uses five confirmed operational methods. The organisation is coordinated and actively operational — not a lone actor.",
+        "evidence": [
+          {
+            "lbl": "Anonymous Video Broadcasts at Sisyphus Theatre",
+            "detail": "Echo has broadcast videos at Sisyphus Theatre on at least two confirmed occasions. Videos were played on repeat, clearly intended for mass public viewing. On Jun 14, @theecho posted a live operation signal — 'DESTINATION: THEATER. AUTHORIZATION: PENDING.' — and a second broadcast was confirmed shortly after.",
+            "src": "Director Flynn report #078 · @theecho comm post Jun 14, 22:38 · Second broadcast confirmed same night"
+          },
+          {
+            "lbl": "Birdy Transmissions via Three Coordinated Accounts",
+            "detail": "Echo operates three Birdy accounts with distinct roles: @theecho handles public broadcasts and cryptic messaging; @theassailant conducts real-time ground surveillance; @theallseeing was the original intel leak channel, previously linked to Glizzy McGuire. The accounts are coordinated — @theecho signals an operation and @theassailant documents targets in real time.",
+            "src": "Account analysis FIB compilation · @theallseeing follower list"
+          },
+          {
+            "lbl": "Graffiti Tagging of Government and Public Buildings",
+            "detail": "'WE ARE THE ECHO' tags found at two separate locations. Logo is consistent across all sites: a hooded masked figure with an audio waveform symbol beneath. The same tag was also found inside the Paradigm Agency on Popular Street.",
+            "src": "Physical evidence recovered from two graffiti sites · Paradigm Agency scene report"
+          },
+          {
+            "lbl": "Occupation of the Paradigm Agency",
+            "detail": "Echo occupied the Paradigm Agency on Popular Street. Inside: old files scattered, a photograph of the lighthouse, code E3-E6-F-03 on a whiteboard, a partially legible name list including 'Mondo Alive,' a map with red markings, and a photograph of an FIB black site (dark hallway with keypad door). The scene was later reported to police by Glizzy McGuire.",
+            "src": "Commander CJ Williams #024 scene report · Physical evidence recovered from Paradigm Agency"
+          },
+          {
+            "lbl": "Real-Time Surveillance of Agents and Civilians",
+            "detail": "@theassailant was actively posting surveillance photos on Jun 14. At 23:16, aerial road surveillance with caption 'we watch your every move.' At 23:38, a rooftop photo of FIB Agent Rob Cooper and Daisy Andrews captioned 'they looked cute together but what all does she still remember?' Echo is watching specific targets in real time.",
+            "src": "@theassailant posts Jun 14 at 23:16 and 23:38 · Rob Cooper and Daisy Andrews identified"
+          }
+        ]
+      },
+      {
+        "name": "Claims",
+        "tag": "UNVERIFIED",
+        "tc": "t-orange",
+        "desc": "What Echo alleges about the government",
+        "summary": "Echo makes six core allegations against the FIB, LSPD, DOJ, and The Vanguard. Some are independently corroborated; others remain unverified.",
+        "evidence": [
+          {
+            "lbl": "FIB, LSPD, and DOJ Engage in Systemic Cover-Ups",
+            "detail": "Video 1: 'Civilians disappear, warrants vanish when they become inconvenient, truth is rewritten faster than it can be spoken.' The extended Jun 11 transmission adds: 'How many times have weapons gone missing? How many times have civilians been put in danger?' These are pattern-of-abuse allegations, not isolated incidents.",
+            "src": "Video 1 transcript · Extended transmission Jun 11 transcript"
+          },
+          {
+            "lbl": "Shadow Group 'The Vanguard' Controls Government",
+            "detail": "An informant stated the theory that 'the Vanguard comprises high-level individuals across all government departments, like the Illuminati.' This was corroborated by an anonymous DM to @theallseeing on Mar 31 listing six specific Vanguard members by name and position. The source stated: 'The leader of Vanguard is somewhere on that list.'",
+            "src": "Director Flynn informant · Anonymous DM to @theallseeing Mar 31 · Vanguard member list"
+          },
+          {
+            "lbl": "FIB Operates Secret Black Sites",
+            "detail": "Video 1: 'There are places beneath this city you have never been, not marked on maps, not in records.' @theallseeing exposed the FIB Safehouse on Union Road, Grapeseed on Mar 29. @theassailant posted a photo of the same building: 'here lies 1 of many black sites.' A black site photo was also found inside Paradigm Agency.",
+            "src": "Video 1 transcript · @theallseeing Mar 29 · @theassailant black site photo · Paradigm Agency"
+          },
+          {
+            "lbl": "Witnesses Are Silenced and Memories Suppressed",
+            "detail": "Echo referenced Harold Sullivan on Jun 11: 'Some voices refuse to rest. Harold Sullivan is still talking. EVERY LIE ECHOES.' The Jun 11 transmission references 'voices buried, memories hidden.' @theassailant photographed Daisy Andrews and captioned it 'what does she still remember?' — implying suppressed knowledge.",
+            "src": "@theecho Harold Sullivan post Jun 11 · Extended transmission Jun 11 · @theassailant Jun 14 23:38"
+          },
+          {
+            "lbl": "FIB Manipulated Weather Systems and Caused the Flood",
+            "detail": "WEATHER transmission: 'Weather systems compromised. Patterns manipulated. Forecasts rewritten. Ask yourself: who really decides when the storm arrives? This is only a demonstration.' The dam was blown on Jun 12 — after Echo issued this warning. Echo frames the flood as an FIB demonstration of infrastructure control.",
+            "src": "WEATHER transmission transcript · @theecho dam post Jun 12 22:28 · Flood event Jun 12"
+          },
+          {
+            "lbl": "Echo Did NOT Blow the Dam — They Are Being Framed",
+            "detail": "@theecho Jun 12: 'They will point to the dam. They always need something to blame. But the clouds remember. And the skies do not lie.' Extended transmission: 'Now they accuse civilians of being Echo. Not because they know, but because they fear. A fearful people in power become dangerous.' Echo has denied dam responsibility consistently across every channel.",
+            "src": "@theecho Birdy posts Jun 12 · Extended transmission Jun 11 · WEATHER transmission"
+          }
+        ]
+      },
+      {
+        "name": "Known Actions",
+        "tag": "CONFIRMED",
+        "tc": "t-red",
+        "desc": "Verified acts carried out by Echo",
+        "summary": "These are the actions Echo has demonstrably carried out — confirmed by physical evidence, witness accounts, or direct documentation.",
+        "evidence": [
+          {
+            "lbl": "Theatre Broadcast #1 — Sisyphus Theatre",
+            "detail": "A video was played on repeat at Sisyphus Theatre. Director Flynn and Agent Sleepy responded after seeing posts from @theallseeing. Also present: Gracie Grant, most of Weazel News, Hazel Lee, and several civilians. The video played on repeat — Echo wanted maximum viewership.",
+            "src": "Director Flynn report #078 · Multiple civilian witnesses"
+          },
+          {
+            "lbl": "Theatre Broadcast #2 — Jun 14 (Confirmed)",
+            "detail": "@theecho posted 'COMM CHANNEL OPEN. PRIORITY: HIGH. DESTINATION: THEATER. AUTHORIZATION: PENDING.' at 22:38 Jun 14. A second broadcast was confirmed shortly after. Echo executed a live operation while under active investigation.",
+            "src": "@theecho comm post Jun 14 22:38 · Second broadcast confirmed"
+          },
+          {
+            "lbl": "Dam Footage Posted Before the Flood",
+            "detail": "Echo posted dam footage before it was blown. Weazel News article by Gracie Grant directly linked 'Echo's damning video' to the explosion. City flooded Jun 12 — citizens evacuated by boat, helicopter, and blimp to Mt. Chiliad. Whether Echo caused the flood or is being framed is the central question.",
+            "src": "Weazel News article by Gracie Grant Jun 12 · Flood event Jun 12"
+          },
+          {
+            "lbl": "Graffiti Tags at Multiple Locations",
+            "detail": "'WE ARE THE ECHO' with the hooded figure and waveform logo found at two brick-building locations and inside Paradigm Agency. Consistent logo across all three sites — pre-planned, coordinated.",
+            "src": "Physical evidence recovered from graffiti sites · Paradigm Agency scene"
+          },
+          {
+            "lbl": "Paradigm Agency Occupation",
+            "detail": "Echo occupied the Paradigm Agency on Popular Street, leaving behind files, a map, a black site photo, code E3-E6-F-03, a lighthouse photograph, and a name list including 'Mondo Alive.' The scene appears deliberately staged.",
+            "src": "Physical evidence · Commander CJ Williams #024 scene report"
+          },
+          {
+            "lbl": "Real-Time Surveillance Active as of Jun 14",
+            "detail": "@theassailant posted two live surveillance photos on Jun 14: road surveillance at 23:16 and a rooftop photo of FIB Agent Rob Cooper and Daisy Andrews at 23:38. Echo is actively monitoring specific individuals right now.",
+            "src": "@theassailant posts Jun 14 23:16 and 23:38"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "birdy",
+    "title": "Birdy Network",
+    "icon": "⬡",
+    "desc": "Echo's three coordinated accounts",
+    "items": [
+      {
+        "name": "@theecho — Broadcast Channel",
+        "tag": "BROADCAST",
+        "tc": "t-red",
+        "desc": "Main propaganda and messaging arm",
+        "summary": "The primary public-facing account. All major Echo transmissions, warnings, and operation signals originate here. Posts are cryptic, deliberate, and timed to coincide with real-world events.",
+        "evidence": [
+          {
+            "lbl": "Harold Sullivan Post — Jun 11",
+            "detail": "'Some voices refuse to rest. Harold Sullivan is still talking. Can you hear him? EVERY LIE ECHOES.' Echo is deliberately amplifying Harold Sullivan — someone whose testimony has apparently been suppressed. 'Every lie echoes' suggests his account directly contradicts an official narrative.",
+            "src": "@theecho Birdy post Jun 11"
+          },
+          {
+            "lbl": "Dam Denial Post — Jun 12 at 22:28",
+            "detail": "Post with dam video: 'They will point to the dam. They always need something to blame. But the clouds remember. And the skies do not lie.' This is Echo explicitly denying responsibility and framing the accusation as predictable government deflection.",
+            "src": "@theecho Birdy post Jun 12 22:28"
+          },
+          {
+            "lbl": "Flood Follow-Up Posts — Jun 12",
+            "detail": "'Funny how quickly the city fills when the skies refuse to stop crying. Some storms are no accident.' And: 'You wanted proof. Now you are standing in it.' Echo presents the flood as the FIB demonstrating their infrastructure power — not an Echo attack.",
+            "src": "@theecho Birdy posts Jun 12"
+          },
+          {
+            "lbl": "Operation Signal — Jun 14 at 22:38",
+            "detail": "'COMM CHANNEL OPEN. PRIORITY: HIGH. DIRECT MESSAGE INCOMING. DESTINATION: THEATER. AUTHORIZATION: PENDING. END OF LINE.' This was a live operational signal. A second theatre broadcast was confirmed shortly after. Echo has internal coordination — someone gives authorisation and others execute.",
+            "src": "@theecho Birdy post Jun 14 22:38 · Second broadcast confirmed"
+          }
+        ]
+      },
+      {
+        "name": "@theassailant — Surveillance Arm",
+        "tag": "SURVEILLANCE",
+        "tc": "t-orange",
+        "desc": "Real-time ground surveillance and targeting",
+        "summary": "The eyes on the ground. Posts real-time photos of agents, civilians, and government facilities. Still actively posting as of Jun 14 at 23:38.",
+        "evidence": [
+          {
+            "lbl": "FIB Black Site Photo — Grapeseed",
+            "detail": "'here lies 1 of many black sites, but the FIB will never tell you what goes on inside.' Photo of the building on Union Road, Grapeseed — the same building @theallseeing exposed in March. @theassailant revisiting previously identified locations suggests the accounts share intelligence.",
+            "src": "@theassailant Birdy post · Cross-referenced with @theallseeing Mar 29 exposure"
+          },
+          {
+            "lbl": "Road Surveillance Photo — Jun 14 at 23:16",
+            "detail": "'we watch your every move.' Aerial road surveillance photo. Echo is actively monitoring movement in the city on the night of Jun 14 while the investigation into them is actively running.",
+            "src": "@theassailant Birdy post Jun 14 23:16"
+          },
+          {
+            "lbl": "Rooftop Surveillance — FIB Agent Rob Cooper and Daisy Andrews — Jun 14 at 23:38",
+            "detail": "'they looked cute together but what all does she still remember?' Rooftop photo of FIB Agent Rob Cooper and Daisy Andrews. Rob Cooper is confirmed clear — he is her boyfriend and unaware of the Echo investigation. The question is directed entirely at Daisy Andrews.",
+            "src": "@theassailant Birdy post Jun 14 23:38 · Rob Cooper and Daisy Andrews identified"
+          }
+        ]
+      },
+      {
+        "name": "@theallseeing — Intel Leak Channel",
+        "tag": "INTEL LEAKS",
+        "tc": "t-blue",
+        "desc": "Previously operated by Glizzy McGuire",
+        "summary": "The original Echo-linked account. Had access to non-public FIB information — confirming an active insider source. Posts FIB compilation.",
+        "evidence": [
+          {
+            "lbl": "CI Meeting Location Exposed — Mar 29",
+            "detail": "@theallseeing posted photos of the FIB CI meeting location and named AD Justin Talon despite him being blacked out — meaning they had prior knowledge of who would be there before agents arrived. This is pre-arrival intelligence, not after-the-fact surveillance.",
+            "src": "@theallseeing posts Mar 29 "
+          },
+          {
+            "lbl": "Evangeline and Simon Constantine Exposed — Mar 29",
+            "detail": "@theallseeing posted allegations of organ harvesting at Eclipse Hospital, referencing MDW incidents 3227 and 4647. These are non-public MDW case numbers. Their use in a public Birdy post is the strongest confirmation of an active FIB insider feeding Echo.",
+            "src": "@theallseeing post Mar 29 · MDW incidents 3227 and 4647 — non-public"
+          },
+          {
+            "lbl": "FIB Safehouse Exposed — Mar 29",
+            "detail": "@theallseeing exposed the FIB safehouse on Union Road, Grapeseed. The building is classified. Posting it publicly made it temporarily unusable. The provider of this information had access to classified FIB infrastructure data.",
+            "src": "@theallseeing post Mar 29 · Safehouse operationally compromised"
+          },
+          {
+            "lbl": "Anonymous Vanguard Member List Received — Mar 31",
+            "detail": "@theallseeing received an anonymous DM containing a named Vanguard member list. The account responded: 'Thank you, its time they get exposed.' The anonymous sender stated: 'This group has been under our watch for some time.' Who has been watching the Vanguard?",
+            "src": "@theallseeing DM received Mar 31 · Anonymous sender identity unknown"
+          }
+        ]
+      },
+      {
+        "name": "@theallseeing Followers",
+        "tag": "WATCH LIST",
+        "tc": "t-yellow",
+        "desc": "Known followers as of Mar 31",
+        "summary": "Accounts following @theallseeing as of the Vanguard list date. The Mayor's presence is a significant political flag.",
+        "evidence": [
+          {
+            "lbl": "Cherry Popper — Mayor (@ch3rry)",
+            "detail": "The Mayor of Los Santos is following @theallseeing. Whether the Mayor is monitoring Echo, aware of what @theallseeing was exposing, or has a deeper connection is unknown. This is the most significant entry on the follower list.",
+            "src": "@theallseeing follower list FIB compilation"
+          },
+          {
+            "lbl": "Remaining Followers",
+            "detail": "Olivia Brooks (@youonlylivonce), Lightning Strikes (@thundemgclockin), Ricky Turbo (@rickyturbostyle), Morgan Tinkles (@morgan1), Jenny (@jamber), Izzie (@bluebird), Bradley Bee (@beee), barryshimshek (@barryshimshek). None have been connected to Echo activity beyond following the account.",
+            "src": "@theallseeing follower list FIB compilation"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "transmissions",
+    "title": "Transmissions",
+    "icon": "▶",
+    "desc": "All three Echo video broadcasts",
+    "items": [
+      {
+        "name": "Video 1 — Sisyphus Theatre",
+        "tag": "BROADCAST",
+        "tc": "t-red",
+        "desc": "The first public transmission",
+        "summary": "The first known Echo broadcast, played on repeat at Sisyphus Theatre. Names FIB, LSPD, DOJ, and The Vanguard directly.",
+        "evidence": [
+          {
+            "lbl": "Full Transcript",
+            "detail": "'What you call order, what you call protection, is only what you are allowed to see. There are places beneath this city you have never been, not marked on maps, not in records. Civilians disappear, warrants vanish when they become inconvenient, truth is rewritten faster than it can be spoken, and those who ask too many questions are threatened. This is not a warning; this is a reflection. Nobody is untouchable: the FIB, LSPD, the DOJ, the Vanguard. When the signal breaks, everyone will hear it. You are being watched.'",
+            "src": "Video 1 transcript — Sisyphus Theatre"
+          },
+          {
+            "lbl": "Key Claim: Secret Underground Locations",
+            "detail": "'There are places beneath this city you have never been, not marked on maps, not in records.' This aligns with the FIB black site photo found at Paradigm Agency, the Grapeseed safehouse exposure, and the restricted location referenced in the Director Flynn report.",
+            "src": "Cross-referenced with Paradigm Agency evidence · @theallseeing safehouse exposure"
+          },
+          {
+            "lbl": "Key Claim: The Vanguard Named Directly",
+            "detail": "'Nobody is untouchable: the FIB, LSPD, the DOJ, the Vanguard.' This is the first time Echo names The Vanguard publicly, positioning it as equal or superior to official institutions — not a subsidiary group.",
+            "src": "Video 1 transcript · Cross-referenced with Vanguard member list"
+          },
+          {
+            "lbl": "'When the Signal Breaks' — What Does It Mean?",
+            "detail": "'When the signal breaks, everyone will hear it.' This appears to be a promise of a larger revelation — possibly a data dump, a system disruption, or another broadcast. The phrase has not yet been explained by subsequent Echo activity.",
+            "src": "Video 1 transcript · WEATHER transmission context"
+          }
+        ]
+      },
+      {
+        "name": "WEATHER Transmission",
+        "tag": "BROADCAST",
+        "tc": "t-red",
+        "desc": "FIB weather manipulation claims",
+        "summary": "Claims FIB manipulated weather systems and frames the subsequent flood as a demonstration of FIB infrastructure control — not an Echo attack.",
+        "evidence": [
+          {
+            "lbl": "Full Transcript",
+            "detail": "'Echo transmission. You believe that FIB watches. You believe they investigate. You believe they protect. But they control more than you think. Want proof? Not your phones. Not the cameras. Not your records. The sky itself. Weather systems compromised. Patterns manipulated. Forecasts rewritten. Ask yourself: who really decides when the storm arrives? This is only a demonstration. Imagine what you still cannot see. Echo is listening. End transmission.'",
+            "src": "WEATHER transmission transcript"
+          },
+          {
+            "lbl": "Key Claim: Weather Systems Under FIB Control",
+            "detail": "'Weather systems compromised. Patterns manipulated. Forecasts rewritten.' Echo claims the FIB can influence weather and used it. The transmission explicitly frames what follows as 'only a demonstration,' warning of a larger capability.",
+            "src": "WEATHER transmission"
+          },
+          {
+            "lbl": "Timing Relative to the Flood",
+            "detail": "This video was posted before the dam was blown and the city flooded on Jun 12. Echo warned of weather and infrastructure manipulation before it happened. If Echo caused the flood, warning about it in advance makes no strategic sense. If the Vanguard caused it, Echo warning first supports the whistleblower narrative.",
+            "src": "WEATHER transmission · Dam explosion and flood Jun 12 · @theecho denials"
+          }
+        ]
+      },
+      {
+        "name": "Extended Transmission — Jun 11",
+        "tag": "BROADCAST",
+        "tc": "t-red",
+        "desc": "Most detailed broadcast",
+        "summary": "The most comprehensive transmission. Addresses FIB overreach, pattern of abuse, the dam accusation, law weaponisation, and silenced witnesses.",
+        "evidence": [
+          {
+            "lbl": "FIB Moving From Investigation to Control",
+            "detail": "'What happens when those who investigate become those who judge?' FIB is accused of overstepping its investigative mandate and assuming the role of judge and executioner — above the law it is supposed to enforce.",
+            "src": "Extended transmission Jun 11 transcript"
+          },
+          {
+            "lbl": "Pattern of Abuse",
+            "detail": "'How many times have weapons gone missing? How many times are civilians being put in danger? How many times have they called it justice?' Echo is alleging a systemic, repeated pattern — not isolated incidents.",
+            "src": "Extended transmission Jun 11 transcript"
+          },
+          {
+            "lbl": "Directly Denying Dam Responsibility",
+            "detail": "'Now they accuse civilians of being Echo. Not because they know, but because they fear. A fearful people in power become dangerous. They write the laws, they enforce the laws, and when challenged, they execute in the name of those laws. Who gave them that power? You? Or themselves?'",
+            "src": "Extended transmission Jun 11 transcript"
+          },
+          {
+            "lbl": "Black Sites and Silenced Witnesses",
+            "detail": "'Facilities never meant for public eyes. Doors never meant to be opened. We listened. We watched. We found voices. Stories buried. Memories hidden. Questions they never wanted asked.' Directly ties to the Grapeseed black site, Paradigm Agency evidence, and surveillance of Daisy Andrews.",
+            "src": "Extended transmission Jun 11 · Cross-referenced with physical evidence"
+          },
+          {
+            "lbl": "The Four Closing Questions",
+            "detail": "'Why do good people meet in secret bunkers? Why do protectors need hidden rooms? Why are witnesses silenced? Why are questions feared? The silence protects no one. Truth belongs to everyone.'",
+            "src": "Extended transmission Jun 11 transcript"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vanguard",
+    "title": "The Vanguard",
+    "icon": "◈",
+    "desc": "Shadow council — 6 named members",
+    "items": [
+      {
+        "name": "FIB Director Krieg",
+        "tag": "VANGUARD",
+        "tc": "t-red",
+        "desc": "FIB Director — highest ranking member",
+        "summary": "The highest-ranking Vanguard member on the list. Possibly the leader. As FIB Director, Krieg would have the authority and access to carry out everything Echo alleges.",
+        "evidence": [
+          {
+            "lbl": "Named on Anonymous Vanguard List",
+            "detail": "Director Krieg was named as a Vanguard member in the anonymous DM sent to @theallseeing on Mar 31. The anonymous source stated: 'The leader of Vanguard is somewhere on that list.' As the highest-ranking individual listed, Krieg is the primary candidate for Vanguard leadership.",
+            "src": "Anonymous DM to @theallseeing Mar 31 · Vanguard member list"
+          },
+          {
+            "lbl": "Access and Authority Consistent with Allegations",
+            "detail": "As FIB Director, Krieg would have authority to bury warrants, operate off-book facilities, suppress witnesses, and access weather and infrastructure systems — all of which Echo alleges the Vanguard controls.",
+            "src": "Institutional access analysis"
+          }
+        ]
+      },
+      {
+        "name": "FIB AD Justin Talon",
+        "tag": "VANGUARD",
+        "tc": "t-red",
+        "desc": "Named despite blackout — now left the state",
+        "summary": "Named on the Vanguard list. @theallseeing identified Talon by name during a CI meeting despite him being officially blacked out — confirming insider knowledge of his movements.",
+        "evidence": [
+          {
+            "lbl": "Named on Vanguard List",
+            "detail": "FIB AD Justin Talon was listed as a Vanguard member in the anonymous DM. He has since left the state.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          },
+          {
+            "lbl": "Named Despite Blackout",
+            "detail": "@theallseeing posted CI meeting photos and specifically named 'Justin Talon was there as well!' despite Talon being officially blacked out. The account had prior knowledge of who would be present — confirming an insider source with access to operational personnel movements.",
+            "src": "@theallseeing post Mar 29 "
+          },
+          {
+            "lbl": "Left the State",
+            "detail": "Former Director Talon has since left the state. His departure from jurisdiction may be relevant — either coincidental or a deliberate move following increased scrutiny.",
+            "src": "Case file update — Former Director Talon status"
+          }
+        ]
+      },
+      {
+        "name": "Immy Deer",
+        "tag": "VANGUARD",
+        "tc": "t-orange",
+        "desc": "Unknown — civilian or government",
+        "summary": "Listed as a Vanguard member. Role and affiliation unknown.",
+        "evidence": [
+          {
+            "lbl": "Named on Vanguard List",
+            "detail": "Immy Deer was named in the anonymous DM. No further information is available. Their inclusion alongside FIB Director-level personnel suggests either a high-ranking government figure or a civilian operative with significant influence or access.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          }
+        ]
+      },
+      {
+        "name": "Hopper Rabit",
+        "tag": "VANGUARD",
+        "tc": "t-orange",
+        "desc": "Unknown — civilian or government",
+        "summary": "Listed as a Vanguard member. Role and affiliation unknown.",
+        "evidence": [
+          {
+            "lbl": "Named on Vanguard List",
+            "detail": "Hopper Rabit was named in the anonymous DM. No further information available. The name may be an alias.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          }
+        ]
+      },
+      {
+        "name": "Red",
+        "tag": "VANGUARD",
+        "tc": "t-orange",
+        "desc": "Single name — likely an alias",
+        "summary": "Listed as a Vanguard member. A single name with no additional identification strongly suggests an alias.",
+        "evidence": [
+          {
+            "lbl": "Single Name — Alias Suspected",
+            "detail": "'Red' appears on the Vanguard list with no surname, title, or affiliation. All other members have full names or titles. A single codename suggests either an alias for a known figure, or an individual known to the anonymous source only by this name.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          }
+        ]
+      },
+      {
+        "name": "Anonymous DM Sender",
+        "tag": "KEY UNKNOWN",
+        "tc": "t-yellow",
+        "desc": "Sent Vanguard list to @theallseeing",
+        "summary": "This unknown individual sent the complete Vanguard member list and stated 'this group has been under our watch for some time.' They have FIB-level intelligence. Identifying them is a top priority.",
+        "evidence": [
+          {
+            "lbl": "Sent Complete Vanguard Member List",
+            "detail": "The anonymous source DMed @theallseeing on Mar 31 with a list naming all six Vanguard members including their FIB positions. This level of specificity requires access to classified FIB intelligence.",
+            "src": "@theallseeing DM received Mar 31"
+          },
+          {
+            "lbl": "'This Group Has Been Under Our Watch For Some Time'",
+            "detail": "The source has been actively monitoring the Vanguard — suggesting either an FIB counterintelligence operation, a Vanguard defector, or a parallel organisation with surveillance capability. The use of 'our watch' implies a group, not an individual.",
+            "src": "@theallseeing DM Mar 31 · Source statement"
+          },
+          {
+            "lbl": "@theallseeing Responded Positively",
+            "detail": "'Thank you, its time they get exposed.' @theallseeing welcomed the list and aligned with the source's goal. This makes the anonymous sender and @theallseeing allied parties in the exposure of the Vanguard.",
+            "src": "@theallseeing response Mar 31"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "suspects",
+    "title": "Suspects",
+    "icon": "◆",
+    "desc": "Active persons of interest",
+    "items": [
+      {
+        "name": "Glizzy McGuire",
+        "tag": "HIGH",
+        "tc": "t-red",
+        "desc": "Previously operated @theallseeing",
+        "summary": "Highest-priority individual suspect. Previously ran @theallseeing. 'GM' initials match lighthouse note. Saw agents enter restricted location. Positioned himself as witness at Paradigm Agency.",
+        "evidence": [
+          {
+            "lbl": "Previously Operated @theallseeing",
+            "detail": "'The last time this information surfaced, Glizzy McGuire was leaking it via @theallseeing eye account on Birdie.' Glizzy has a confirmed history of operating the account used to leak FIB intelligence in March. He knows the account, the methods, and the content.",
+            "src": "Director Flynn report #078"
+          },
+          {
+            "lbl": "'GM' Note at the Lighthouse",
+            "detail": "A note was found near the lighthouse reading 'Who is Echo — GM.' The initials GM are consistent with Glizzy McGuire. A photograph of the lighthouse was also found inside the Paradigm Agency, connecting both locations in Echo's evidence trail.",
+            "src": "Physical evidence — lighthouse note · Paradigm Agency lighthouse photo"
+          },
+          {
+            "lbl": "Saw Agents Enter Restricted Location",
+            "detail": "Glizzy McGuire was observed seeing agents enter a restricted location that only agents should know about. @theallseeing subsequently claimed to know what the restricted location was.",
+            "src": "Director Flynn report #078 · @theallseeing post"
+          },
+          {
+            "lbl": "Called Police About Paradigm — Deflection?",
+            "detail": "Glizzy McGuire called Commander CJ Williams to report the Paradigm Agency scene — positioning himself as a cooperative civilian witness. This could be genuine or deliberate deflection.",
+            "src": "Commander CJ Williams #024 scene report"
+          },
+          {
+            "lbl": "Weakness — Could Be Framed",
+            "detail": "All circumstantial evidence could be manufactured by someone who knows Glizzy's connection to @theallseeing. Without direct evidence tying him to current operations, the case is not conclusive.",
+            "src": "Investigative caveat"
+          }
+        ]
+      },
+      {
+        "name": "Anonymous DM Sender",
+        "tag": "HIGH",
+        "tc": "t-red",
+        "desc": "Sent Vanguard list with insider access",
+        "summary": "An unknown individual with FIB-level intelligence on the Vanguard who has been actively monitoring them. Their identity is the single most important unknown in this case.",
+        "evidence": [
+          {
+            "lbl": "Full Evidence — See The Vanguard Section",
+            "detail": "Sent complete named Vanguard member list to @theallseeing. Stated 'this group has been under our watch for some time.' @theallseeing responded positively and aligned with their goal. Must have FIB or law enforcement level access to know these six names and their affiliation.",
+            "src": "Vanguard section · @theallseeing DM Mar 31"
+          }
+        ]
+      },
+      {
+        "name": "Ace Danger",
+        "tag": "MED",
+        "tc": "t-orange",
+        "desc": "Owner of @brain Birdy account",
+        "summary": "Forwarded sensitive FIB intelligence about a CI and The Vanguard to Gracie Grant at Weazel News. FIB had access to his Birdy account at one point.",
+        "evidence": [
+          {
+            "lbl": "Forwarded CI-Sensitive Information to Weazel News",
+            "detail": "Information from @brain (owned by Ace Danger) was forwarded to Gracie Grant at Weazel News regarding an FIB CI and The Vanguard. The information was forwarded but not posted by Grant — possibly because Director Talon warned her that publishing it would compromise a CI and constitute obstruction.",
+            "src": "Director Flynn report #078 · Director Talon intervention"
+          },
+          {
+            "lbl": "FIB Had Access to His @brain Account",
+            "detail": "At some point, the FIB had access to Ace Danger's @brain Birdy account. The circumstances under which this access was granted are not fully documented.",
+            "src": "Director Flynn report #078"
+          }
+        ]
+      },
+      {
+        "name": "Gracie Grant",
+        "tag": "MED",
+        "tc": "t-orange",
+        "desc": "Weazel News — received forwarded intel",
+        "summary": "Received forwarded FIB-sensitive intelligence. Present at the theatre. Authored the dam article. May have been used to carry a planted false narrative designed to discredit investigators.",
+        "evidence": [
+          {
+            "lbl": "Received Forwarded FIB Intelligence",
+            "detail": "Ace Danger forwarded information from @brain to Grant regarding an FIB CI and The Vanguard. Director Talon warned her that publishing it would compromise a CI and constitute obstruction. The information was not posted.",
+            "src": "Director Flynn report #078 · Director Talon call"
+          },
+          {
+            "lbl": "Present at Sisyphus Theatre",
+            "detail": "Gracie Grant was present at the first theatre screening alongside most of Weazel News. Whether their presence was reactive or pre-arranged is unclear.",
+            "src": "Director Flynn report #078"
+          },
+          {
+            "lbl": "Authored Dam Article Linking Echo's Video",
+            "detail": "Grant wrote the Weazel News article about the dam explosion, directly linking 'Echo's damning video' to the event. By linking Echo to the dam, the article positions Echo as responsible — which is exactly what Echo contests.",
+            "src": "Weazel News article by Gracie Grant Jun 12"
+          },
+          {
+            "lbl": "Possible Carrier of Planted False Narrative",
+            "detail": "A Weazel News article targeting an FIB investigator appears to have been a deliberately planted false narrative. If Grant published without verifying the source, she may have been used to discredit the investigation.",
+            "src": "Weazel News planted article · Case file update"
+          }
+        ]
+      },
+      {
+        "name": "Harold Sullivan",
+        "tag": "MED",
+        "tc": "t-orange",
+        "desc": "Amplified by Echo — still talking",
+        "summary": "Named by @theecho on Jun 11. Echo says his voice refuses to rest and his testimony contradicts an official narrative. Must be located.",
+        "evidence": [
+          {
+            "lbl": "'Some Voices Refuse to Rest' — @theecho Jun 11",
+            "detail": "'Some voices refuse to rest. Harold Sullivan is still talking. Can you hear him? EVERY LIE ECHOES.' Echo is amplifying Sullivan and framing him as someone whose testimony has been suppressed. 'Every lie echoes' suggests what he says contradicts an official account of events.",
+            "src": "@theecho Birdy post Jun 11"
+          },
+          {
+            "lbl": "Identity and Testimony Unknown",
+            "detail": "Harold Sullivan has not been identified in the case file. Whether he is a civilian witness, a former government official, or a victim of Vanguard activity is unknown. Finding Sullivan is a priority action.",
+            "src": "Open question #2"
+          }
+        ]
+      },
+      {
+        "name": "Mondo Alive",
+        "tag": "MED",
+        "tc": "t-orange",
+        "desc": "Name found at Paradigm Agency",
+        "summary": "Name appeared on a partially legible list inside Paradigm Agency. The word 'alive' next to a name is notable.",
+        "evidence": [
+          {
+            "lbl": "Found on Name List at Paradigm Agency",
+            "detail": "A partially legible, badly written list of names was found inside Paradigm Agency. One readable entry: 'Mondo Alive.' The specific inclusion of 'alive' may distinguish this person from others on the list who are not alive, or it may simply be part of the name.",
+            "src": "Physical evidence — Paradigm Agency name list"
+          }
+        ]
+      },
+      {
+        "name": "Evangeline and Simon Constantine",
+        "tag": "MED",
+        "tc": "t-orange",
+        "desc": "Alleged organ harvesting — Eclipse Hospital",
+        "summary": "@theallseeing alleged organ harvesting at Eclipse Hospital's morgue, referencing non-public MDW incident numbers. The non-public case numbers are the most significant detail.",
+        "evidence": [
+          {
+            "lbl": "Organ Harvesting Allegation — Eclipse Hospital Morgue",
+            "detail": "@theallseeing posted allegations that Evangeline and Simon Constantine were conducting organ harvesting at Eclipse Hospital's morgue on Mar 29.",
+            "src": "@theallseeing post Mar 29"
+          },
+          {
+            "lbl": "Non-Public MDW Incidents 3227 and 4647 Referenced",
+            "detail": "The post referenced MDW incidents 3227 and 4647 — non-public case numbers not accessible to civilians. Their use confirms the information came from an active insider with access to restricted case records.",
+            "src": "@theallseeing post Mar 29 "
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "watchlist",
+    "title": "Watch List and Cleared",
+    "icon": "◇",
+    "desc": "Watch list and confirmed cleared personnel",
+    "items": [
+      {
+        "name": "Clifford Jones",
+        "tag": "WATCH",
+        "tc": "t-yellow",
+        "desc": "Restricted location key holder",
+        "summary": "Has a key to the restricted location that only agents should know about.",
+        "evidence": [
+          {
+            "lbl": "Key Holder — Restricted Location",
+            "detail": "Clifford Jones holds a key to the restricted location referenced in the case file. @theallseeing appeared to know about this location, raising questions about which key holders may have disclosed its existence.",
+            "src": "Director Flynn report #078 — key holders list"
+          }
+        ]
+      },
+      {
+        "name": "Caspian Costello",
+        "tag": "WATCH",
+        "tc": "t-yellow",
+        "desc": "Restricted location key holder",
+        "summary": "Has a key to the restricted location.",
+        "evidence": [
+          {
+            "lbl": "Key Holder — Restricted Location",
+            "detail": "Caspian Costello is listed among the key holders for the restricted location.",
+            "src": "Director Flynn report #078 — key holders list"
+          }
+        ]
+      },
+      {
+        "name": "Primary Color",
+        "tag": "WATCH",
+        "tc": "t-yellow",
+        "desc": "Restricted location key holder",
+        "summary": "Has a key to the restricted location.",
+        "evidence": [
+          {
+            "lbl": "Key Holder — Restricted Location",
+            "detail": "Primary Color holds a key to the restricted location.",
+            "src": "Director Flynn report #078 — key holders list"
+          }
+        ]
+      },
+      {
+        "name": "Cherry Popper — Mayor",
+        "tag": "WATCH",
+        "tc": "t-yellow",
+        "desc": "Following @theallseeing",
+        "summary": "The Mayor of Los Santos is a confirmed follower of @theallseeing. Political implications unknown.",
+        "evidence": [
+          {
+            "lbl": "Following @theallseeing",
+            "detail": "Cherry Popper, the Mayor, appears on the follower list FIB compilation. Whether the Mayor is monitoring Echo's channel out of civic concern or has a deeper connection is unknown.",
+            "src": "@theallseeing follower list — FIB compilation"
+          }
+        ]
+      },
+      {
+        "name": "Daisy Andrews",
+        "tag": "WATCH",
+        "tc": "t-yellow",
+        "desc": "Echo actively surveilling her",
+        "summary": "Echo is watching Daisy Andrews specifically. She is most likely a witness holding suppressed knowledge — not a suspect.",
+        "evidence": [
+          {
+            "lbl": "@theassailant Surveillance Photo — Jun 14",
+            "detail": "'They looked cute together but what all does she still remember?' Rooftop photo of Daisy Andrews with FIB Agent Rob Cooper. The question is directed entirely at Daisy. Rob Cooper is confirmed unaware of the Echo investigation.",
+            "src": "@theassailant post Jun 14 23:38"
+          },
+          {
+            "lbl": "Echo Transmission — Buried Memories",
+            "detail": "The extended Jun 11 transmission references 'voices buried, memories hidden.' Daisy Andrews may be one of these buried voices — someone who witnessed something but was pressured or manipulated into silence.",
+            "src": "Extended transmission Jun 11 · @theassailant surveillance"
+          },
+          {
+            "lbl": "Not a Suspect — Likely a Witness",
+            "detail": "Daisy Andrews is not believed to be connected to Echo. She is being watched by Echo, not working with them. Her status as a probable witness makes her a priority interview subject.",
+            "src": "Case file assessment"
+          }
+        ]
+      },
+      {
+        "name": "Director Flynn",
+        "tag": "CLEARED",
+        "tc": "t-green",
+        "desc": "Reporting agent — Case #078",
+        "summary": "Confirmed clear. Director Flynn is the reporting agent on this investigation.",
+        "evidence": [
+          {
+            "lbl": "Reporting Agent",
+            "detail": "Director Flynn filed the initial report that opened Case #078 and has been leading the investigation. Cleared.",
+            "src": "Director Flynn report #078"
+          }
+        ]
+      },
+      {
+        "name": "FIB Agent Rob Cooper",
+        "tag": "CLEARED",
+        "tc": "t-green",
+        "desc": "Confirmed clear — dating Daisy Andrews",
+        "summary": "Confirmed clear. FIB Agent Rob Cooper is in a relationship with Daisy Andrews and is unaware of the Echo investigation.",
+        "evidence": [
+          {
+            "lbl": "Confirmed Clear",
+            "detail": "FIB Agent Rob Cooper has been confirmed clear. He has no connection to Echo and is unaware of the investigation.",
+            "src": "Case file update — Rob Cooper status"
+          },
+          {
+            "lbl": "Dating Daisy Andrews — Unaware",
+            "detail": "Rob Cooper and Daisy Andrews are in a relationship. Echo's surveillance was focused entirely on Daisy, not Rob. Cooper is unaware of her potential significance as a witness.",
+            "src": "Case file update · @theassailant post Jun 14 23:38"
+          }
+        ]
+      },
+      {
+        "name": "Ziggy Stripes / Huck Forse / Former Director Talon",
+        "tag": "CLEARED",
+        "tc": "t-green",
+        "desc": "Previously ruled out",
+        "summary": "Three individuals previously considered and ruled out.",
+        "evidence": [
+          {
+            "lbl": "Ziggy Stripes — Ruled Out",
+            "detail": "Previously considered and ruled out. Reason not documented in current case file.",
+            "src": "Case file"
+          },
+          {
+            "lbl": "Huck Forse — Removed",
+            "detail": "Removed from investigation. May have had elevated access to the restricted location previously.",
+            "src": "Director Flynn report #078"
+          },
+          {
+            "lbl": "Former Director Talon — Left the State",
+            "detail": "Former Director Talon has left the state. Also listed as a Vanguard member in the anonymous DM.",
+            "src": "Case file update · Vanguard list"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "locations",
+    "title": "Key Locations",
+    "icon": "◉",
+    "desc": "Eight locations tied to the investigation",
+    "items": [
+      {
+        "name": "Sisyphus Theatre",
+        "tag": "ECHO ACTIVE",
+        "tc": "t-red",
+        "desc": "Primary broadcast site",
+        "summary": "Echo's confirmed broadcast venue. Used at least twice. Videos played on repeat for mass public viewing.",
+        "evidence": [
+          {
+            "lbl": "First Broadcast",
+            "detail": "Director Flynn and Agent Sleepy responded to posts from @theallseeing. Also present: Gracie Grant, most of Weazel News, Hazel Lee, several civilians. The video was on repeat — designed for maximum exposure.",
+            "src": "Director Flynn report #078"
+          },
+          {
+            "lbl": "Second Broadcast — Jun 14",
+            "detail": "@theecho posted a priority comm at 22:38: 'DESTINATION: THEATER. AUTHORIZATION: PENDING.' A second broadcast was confirmed shortly after. Echo executed a live operation while under active investigation.",
+            "src": "@theecho post Jun 14 22:38 · Second broadcast confirmed"
+          }
+        ]
+      },
+      {
+        "name": "City Dam",
+        "tag": "COMPROMISED",
+        "tc": "t-red",
+        "desc": "Blown up Jun 12 — citywide flooding",
+        "summary": "The dam was blown on Jun 12, causing citywide flooding. Echo denies responsibility and claims the FIB demonstrated infrastructure control capability to frame them.",
+        "evidence": [
+          {
+            "lbl": "Dam Explosion and Flood — Jun 12",
+            "detail": "The city dam was blown on Jun 12, flooding the entire city. Citizens were evacuated by boat, helicopter, and blimp to Mt. Chiliad.",
+            "src": "Weazel News article by Gracie Grant Jun 12"
+          },
+          {
+            "lbl": "Echo Denial and Framing Claim",
+            "detail": "'They will point to the dam. They always need something to blame. But the clouds remember.' Echo claims the Vanguard blew the dam as a demonstration and used it to frame Echo. The WEATHER transmission warned of FIB infrastructure control before the flood occurred.",
+            "src": "@theecho posts Jun 12 · WEATHER transmission"
+          }
+        ]
+      },
+      {
+        "name": "Paradigm Agency, Popular Street",
+        "tag": "ECHO USED",
+        "tc": "t-orange",
+        "desc": "Occupied by Echo — evidence left inside",
+        "summary": "Echo occupied and tagged this building, leaving a significant evidence trail. Whether staged for investigators or a genuine operational remnant is unclear.",
+        "evidence": [
+          {
+            "lbl": "Echo Graffiti — Exterior and Interior",
+            "detail": "'WE ARE THE ECHO' with the hooded figure and waveform logo on exterior walls and inside the building.",
+            "src": "Scene report · Physical evidence"
+          },
+          {
+            "lbl": "Files and Documents Left Inside",
+            "detail": "Old files scattered throughout — boxes stacked, documents spread across the space.",
+            "src": "Scene report"
+          },
+          {
+            "lbl": "Photograph of the Lighthouse",
+            "detail": "A photo of the lighthouse was found inside — connecting the Paradigm Agency directly to the lighthouse note signed 'GM.'",
+            "src": "Physical evidence · Cross-reference with lighthouse note"
+          },
+          {
+            "lbl": "Whiteboard: Code E3-E6-F-03",
+            "detail": "Code written on whiteboard. Remainder of the board is also in code. Meaning unknown: grid reference? file number? Echo operation code?",
+            "src": "Physical evidence — Paradigm Agency whiteboard"
+          },
+          {
+            "lbl": "Partially Legible Name List — 'Mondo Alive'",
+            "detail": "A badly written, partially legible list of names. One readable entry: 'Mondo Alive.' Significance unknown.",
+            "src": "Physical evidence — Paradigm Agency name list"
+          },
+          {
+            "lbl": "Map with Red Markings",
+            "detail": "A map with red markings appears to show a region with annotations. Contents not fully deciphered.",
+            "src": "Physical evidence — Paradigm Agency map"
+          },
+          {
+            "lbl": "FIB Black Site Photograph",
+            "detail": "A photo of a dark hallway with a keypad door labelled 'PICTURE LIGHT HOUSE with ???'. Appears to be an FIB black site.",
+            "src": "Physical evidence — Paradigm Agency"
+          }
+        ]
+      },
+      {
+        "name": "Lighthouse",
+        "tag": "UNKNOWN",
+        "tc": "t-yellow",
+        "desc": "'Who is Echo — GM' note found here",
+        "summary": "A note was found near the lighthouse reading 'Who is Echo — GM.' Initials consistent with Glizzy McGuire. A photograph of the lighthouse was found inside Paradigm Agency.",
+        "evidence": [
+          {
+            "lbl": "Note Found: 'Who is Echo — GM'",
+            "detail": "A note found near the lighthouse signed 'GM.' The initials are consistent with Glizzy McGuire. Whether this is a clue from Echo, a genuine question, or a plant to frame Glizzy is unclear.",
+            "src": "Director Flynn report #078 — CI note at lighthouse"
+          },
+          {
+            "lbl": "Lighthouse Photo at Paradigm Agency",
+            "detail": "A photo of the lighthouse was found inside Paradigm Agency, connecting the two locations in Echo's evidence trail.",
+            "src": "Physical evidence — Paradigm Agency"
+          }
+        ]
+      },
+      {
+        "name": "FIB Black Site — Grapeseed",
+        "tag": "COMPROMISED",
+        "tc": "t-red",
+        "desc": "Exposed by @theallseeing and @theassailant",
+        "summary": "The FIB safehouse on Union Road, Grapeseed was exposed by @theallseeing in March and later documented by @theassailant. No longer operationally secure.",
+        "evidence": [
+          {
+            "lbl": "Exposed by @theallseeing — Mar 29",
+            "detail": "@theallseeing posted the location of the FIB safehouse on Union Road, Grapeseed on Mar 29, making it temporarily unusable. The poster knew the location — confirming insider knowledge of classified FIB infrastructure.",
+            "src": "@theallseeing post Mar 29"
+          },
+          {
+            "lbl": "Re-documented by @theassailant",
+            "detail": "'here lies 1 of many black sites.' @theassailant posted a photo of the same building. 'one of many' implies Echo is aware of multiple FIB black sites beyond Grapeseed.",
+            "src": "@theassailant Birdy post"
+          }
+        ]
+      },
+      {
+        "name": "Eclipse Hospital",
+        "tag": "ACTIVE CONCERN",
+        "tc": "t-orange",
+        "desc": "Alleged organ harvesting — Constantine case",
+        "summary": "@theallseeing alleged organ harvesting at Eclipse Hospital's morgue by Evangeline and Simon Constantine. Referenced using non-public MDW incident numbers.",
+        "evidence": [
+          {
+            "lbl": "Organ Harvesting Allegation",
+            "detail": "Posted by @theallseeing on Mar 29. The allegation names Evangeline and Simon Constantine specifically and references the morgue at Eclipse Hospital.",
+            "src": "@theallseeing post Mar 29"
+          },
+          {
+            "lbl": "Non-Public MDW Incidents 3227 and 4647",
+            "detail": "The post cited restricted case numbers not accessible to the public. Their inclusion confirms the source has access to restricted government case records.",
+            "src": "@theallseeing post Mar 29 "
+          }
+        ]
+      },
+      {
+        "name": "CI Meeting Location",
+        "tag": "COMPROMISED",
+        "tc": "t-red",
+        "desc": "Jerry One blown up here",
+        "summary": "Surveilled by @theallseeing before agents arrived. Jerry One helicopter was blown up here. The white/blue car present before the explosion has not been identified.",
+        "evidence": [
+          {
+            "lbl": "@theallseeing Had Prior Knowledge",
+            "detail": "@theallseeing posted CI meeting photos and named Justin Talon despite his blackout. They were there before the agents arrived — which requires inside knowledge of the meeting's time and location.",
+            "src": "@theallseeing post Mar 29"
+          },
+          {
+            "lbl": "Jerry One Helicopter Blown Up",
+            "detail": "Jerry One was blown up at this location. A white/baby blue car with blue underglow pulled up, appeared to drop someone off, then left. Seconds later, the helicopter exploded. The vehicle has not been identified.",
+            "src": "Incident report — Jerry One"
+          }
+        ]
+      },
+      {
+        "name": "Mountains",
+        "tag": "VANGUARD TERRITORY",
+        "tc": "t-blue",
+        "desc": "Source says Vanguard operates here",
+        "summary": "A source stated the Vanguard was 'discovered in the mountains.' Possible meeting point or operations base.",
+        "evidence": [
+          {
+            "lbl": "Source Statement",
+            "detail": "'Discovered Vanguard in the mountains.' Whether this refers to a specific facility, a meeting location, or a general operational zone is not documented.",
+            "src": "Informant statement"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "evidence",
+    "title": "Physical Evidence",
+    "icon": "⬛",
+    "desc": "Evidence, codes, and physical finds",
+    "items": [
+      {
+        "name": "Code: E3-E6-F-03",
+        "tag": "UNRESOLVED",
+        "tc": "t-yellow",
+        "desc": "Found on Paradigm Agency whiteboard",
+        "summary": "A code on the Paradigm Agency whiteboard. The rest of the board was also in code. Meaning unknown.",
+        "evidence": [
+          {
+            "lbl": "Found at Paradigm Agency",
+            "detail": "Code E3-E6-F-03 was written on a whiteboard inside the Paradigm Agency. The remainder of the whiteboard was also in code — suggesting this is part of a larger coded system.",
+            "src": "Physical evidence — Paradigm Agency whiteboard"
+          },
+          {
+            "lbl": "Possible Interpretations",
+            "detail": "Map grid reference: does E3-E6 correspond to a location on a Los Santos grid? FIB file number: does F-03 reference a document series? Echo operation code: E = Echo, numbers reference specific operations, F = frequency? No interpretation confirmed.",
+            "src": "Investigative analysis"
+          }
+        ]
+      },
+      {
+        "name": "Note: 'Who is Echo — GM'",
+        "tag": "UNRESOLVED",
+        "tc": "t-yellow",
+        "desc": "Found at the lighthouse",
+        "summary": "Found near the lighthouse. Initials 'GM' consistent with Glizzy McGuire. Could be a genuine question, a lead, or a plant.",
+        "evidence": [
+          {
+            "lbl": "Found at the Lighthouse — Signed 'GM'",
+            "detail": "The note was found near the lighthouse. CI told Director Flynn about it. The lighthouse photograph was also found at Paradigm Agency, connecting the two locations.",
+            "src": "Director Flynn report #078 — CI lighthouse note"
+          },
+          {
+            "lbl": "Initials Consistent with Glizzy McGuire",
+            "detail": "The initials GM match Glizzy McGuire — the highest-priority individual suspect who previously operated @theallseeing. Whether he wrote this or someone is framing him is not resolved.",
+            "src": "Cross-reference with Glizzy McGuire suspect file"
+          }
+        ]
+      },
+      {
+        "name": "MDW Incidents 3227 and 4647",
+        "tag": "INSIDER CONFIRMED",
+        "tc": "t-red",
+        "desc": "Non-public numbers cited by @theallseeing",
+        "summary": "The strongest single confirmation of an active insider source within law enforcement. These numbers should not have been accessible to a public Birdy account.",
+        "evidence": [
+          {
+            "lbl": "Non-Public Case Numbers Used Publicly",
+            "detail": "MDW incidents 3227 and 4647 are restricted case references. Their inclusion in an @theallseeing Birdy post confirms that whoever provides information to @theallseeing has access to restricted government and law enforcement records.",
+            "src": "@theallseeing post Mar 29 "
+          },
+          {
+            "lbl": "Significance — Insider Source Confirmed",
+            "detail": "This is the clearest evidence of an active insider. A civilian account should not know these numbers. The person providing them works within law enforcement or government, or has accessed restricted systems.",
+            "src": "FIB analysis"
+          }
+        ]
+      },
+      {
+        "name": "'Mondo Alive' — Paradigm Name List",
+        "tag": "UNRESOLVED",
+        "tc": "t-yellow",
+        "desc": "Name found on list at Paradigm Agency",
+        "summary": "A partially legible name list found inside Paradigm Agency. 'Mondo Alive' is one readable entry. The word 'alive' next to a name is notable.",
+        "evidence": [
+          {
+            "lbl": "Found on Partially Legible List",
+            "detail": "A list of names, written badly, was found at the Paradigm Agency. 'Mondo Alive' is one entry. The word 'alive' may distinguish this person from others who are not alive, or it may simply be part of the name.",
+            "src": "Physical evidence — Paradigm Agency"
+          }
+        ]
+      },
+      {
+        "name": "Map with Red Markings",
+        "tag": "UNRESOLVED",
+        "tc": "t-yellow",
+        "desc": "Found at Paradigm Agency",
+        "summary": "A map with red markings found at Paradigm Agency. Appears to annotate a specific region. Not yet deciphered.",
+        "evidence": [
+          {
+            "lbl": "Found at Paradigm Agency",
+            "detail": "A map with red markings, appearing to show a region with annotations, was found at the Paradigm Agency. Whether this is a map of Los Santos, the wider state, or a specific zone — and what the red markings indicate — has not been determined.",
+            "src": "Physical evidence — Paradigm Agency"
+          }
+        ]
+      },
+      {
+        "name": "Echo Graffiti — Hooded Figure Logo",
+        "tag": "CONFIRMED",
+        "tc": "t-blue",
+        "desc": "Found at three locations",
+        "summary": "'WE ARE THE ECHO' with a consistent logo across all three sites. Pre-planned and coordinated.",
+        "evidence": [
+          {
+            "lbl": "Consistent Logo Across All Sites",
+            "detail": "The same design — hooded masked figure, audio waveform symbol — was used at all three locations. Consistency suggests a single artist or a template distributed within the group.",
+            "src": "Physical evidence — three graffiti locations"
+          },
+          {
+            "lbl": "Inside Paradigm Agency",
+            "detail": "The same tag was found inside Paradigm Agency, confirming Echo's presence inside the building.",
+            "src": "Physical evidence — Paradigm Agency interior"
+          }
+        ]
+      },
+      {
+        "name": "FIB Black Site Photograph",
+        "tag": "CONFIRMED",
+        "tc": "t-red",
+        "desc": "Dark hallway with keypad door",
+        "summary": "A photograph of what appears to be an FIB black site was found inside Paradigm Agency. Echo has photographic evidence of classified FIB facilities.",
+        "evidence": [
+          {
+            "lbl": "Photo Found at Paradigm Agency",
+            "detail": "A photograph showing a dark hallway with a keypad door, labelled 'PICTURE LIGHT HOUSE with ???'. This appears to be the type of restricted facility referenced in Video 1: 'There are places beneath this city you have never been, not marked on maps, not in records.'",
+            "src": "Physical evidence — Paradigm Agency · Video 1 transcript"
+          },
+          {
+            "lbl": "Echo Has Access to These Facilities",
+            "detail": "The fact that Echo has a photograph of the interior of a classified FIB facility means someone with physical access is connected to Echo, or Echo obtained the photograph through their insider source.",
+            "src": "Investigative analysis"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "theories",
+    "title": "Active Theories",
+    "icon": "◐",
+    "desc": "Four ranked working theories",
+    "items": [
+      {
+        "name": "Theory 1 — Vanguard Blew the Dam, Echo is Being Framed",
+        "tag": "MOST SUPPORTED",
+        "tc": "t-green",
+        "desc": "Echo is a whistleblower operation, not a terrorist group",
+        "summary": "The most evidence-supported theory. Echo has consistently denied the dam, the weather broadcast preceded the flood, and a planted false narrative targeting investigators confirms someone is actively working to derail the investigation.",
+        "evidence": [
+          {
+            "lbl": "Echo Denies Dam Responsibility — Consistently",
+            "detail": "'They will point to the dam. They always need something to blame. But the clouds remember.' And: 'Now they accuse civilians of being Echo. Not because they know, but because they fear.' Echo has denied responsibility in Birdy posts and in the extended transmission. The denials are consistent and unprompted.",
+            "src": "@theecho posts Jun 12 · Extended transmission Jun 11"
+          },
+          {
+            "lbl": "WEATHER Broadcast Preceded the Flood",
+            "detail": "Echo's WEATHER transmission warned of FIB infrastructure manipulation before the dam was blown. If Echo caused the flood, warning about it in advance makes no strategic sense. If the Vanguard caused it, Echo warning first supports the whistleblower narrative.",
+            "src": "WEATHER transmission · Dam explosion Jun 12"
+          },
+          {
+            "lbl": "False Narrative Planted Against FIB Investigators",
+            "detail": "Someone fed a false story about an FIB investigator to Weazel News to discredit those working this case. This is consistent with a Vanguard protection move — evidence they are aware of and actively working against the investigation.",
+            "src": "Weazel News planted article · Case file update"
+          },
+          {
+            "lbl": "Echo's Tone is Investigative, Not Terrorist",
+            "detail": "All three transmissions read as whistleblower documents: rhetorical questions, evidence presentations, specific allegations. Echo is making a case — not claiming credit for destruction. Terrorists claim credit; whistleblowers present evidence.",
+            "src": "All three Echo transmission transcripts"
+          }
+        ]
+      },
+      {
+        "name": "Theory 2 — FIB Insider Feeding Echo",
+        "tag": "STRONG EVIDENCE",
+        "tc": "t-blue",
+        "desc": "Someone within law enforcement is Echo's source",
+        "summary": "@theallseeing cited non-public MDW numbers, had pre-arrival knowledge at blacked-out CI meetings, and the anonymous Vanguard list sender stated 'this group has been under our watch.'",
+        "evidence": [
+          {
+            "lbl": "Non-Public MDW Incidents Cited",
+            "detail": "MDW incidents 3227 and 4647 are not publicly accessible. Their use in a Birdy post confirms an insider source with access to restricted case records.",
+            "src": "@theallseeing post Mar 29 "
+          },
+          {
+            "lbl": "Pre-Arrival Knowledge at CI Meeting",
+            "detail": "@theallseeing arrived at the CI meeting location before agents and knew Justin Talon would be there despite his blackout status. This requires inside knowledge of a classified operation's personnel and timing.",
+            "src": "@theallseeing post Mar 29"
+          },
+          {
+            "lbl": "'Under Our Watch For Some Time'",
+            "detail": "The anonymous Vanguard list sender stated their group has been actively monitoring the Vanguard. This is organised, ongoing surveillance — implying a counterintelligence operation or a Vanguard defector.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          },
+          {
+            "lbl": "Access to FIB Black Site Photography",
+            "detail": "Echo has a photograph of the interior of a classified FIB facility. This requires either physical access to the site or receipt of the photo from someone who has that access.",
+            "src": "Paradigm Agency physical evidence"
+          }
+        ]
+      },
+      {
+        "name": "Theory 3 — Glizzy McGuire is Running Echo",
+        "tag": "CIRCUMSTANTIAL",
+        "tc": "t-yellow",
+        "desc": "Or is he being framed?",
+        "summary": "Strong circumstantial indicators: previous @theallseeing operation, 'GM' initials at lighthouse, presence near key locations. But all of this could be manufactured to frame him.",
+        "evidence": [
+          {
+            "lbl": "Previously Operated @theallseeing",
+            "detail": "'The last time this information surfaced, Glizzy McGuire was leaking it via @theallseeing eye account on Birdie.' He has confirmed history with the account and the methods.",
+            "src": "Director Flynn report #078"
+          },
+          {
+            "lbl": "'GM' at the Lighthouse",
+            "detail": "The note 'Who is Echo — GM' with his initials was found near the lighthouse. The lighthouse photograph was also at Paradigm.",
+            "src": "Physical evidence · Director Flynn report"
+          },
+          {
+            "lbl": "Saw Agents Enter Restricted Location",
+            "detail": "Present near a restricted location that only agents should know about. @theallseeing claimed to know what it was.",
+            "src": "Director Flynn report #078"
+          },
+          {
+            "lbl": "Called Police About Paradigm — Deflection?",
+            "detail": "Glizzy called Commander CJ Williams to report the Paradigm scene. Positioning himself as a cooperative witness could be genuine or deliberate deflection.",
+            "src": "Commander CJ Williams #024 scene report"
+          },
+          {
+            "lbl": "Weakness — Could Be Framed",
+            "detail": "Someone who knows Glizzy's history with @theallseeing could have manufactured all this circumstantial evidence. Without direct proof tying him to current operations, the case is not conclusive.",
+            "src": "Investigative caveat"
+          }
+        ]
+      },
+      {
+        "name": "Theory 4 — Daisy Andrews is a Key Witness",
+        "tag": "EMERGING",
+        "tc": "t-orange",
+        "desc": "She knows something without knowing she knows it",
+        "summary": "Echo is watching Daisy Andrews specifically and referencing buried memories. She may have witnessed something connected to the Vanguard without understanding its significance.",
+        "evidence": [
+          {
+            "lbl": "Echo Asking 'What Does She Still Remember?'",
+            "detail": "@theassailant captioned the surveillance photo 'what does she still remember?' — implying an event she witnessed, a suppression of what she knows, or an attempt to determine if she has acted on something.",
+            "src": "@theassailant post Jun 14 23:38"
+          },
+          {
+            "lbl": "Extended Transmission References 'Buried Memories'",
+            "detail": "'We listened. We watched. We found voices. Stories buried. Memories hidden. Questions they never wanted asked.' Daisy Andrews may be one of the people Echo refers to as a buried voice.",
+            "src": "Extended transmission Jun 11"
+          },
+          {
+            "lbl": "Rob Cooper is Confirmed Unaware",
+            "detail": "FIB Agent Rob Cooper is confirmed clear and unaware of the Echo investigation or Daisy's potential significance. Whatever Daisy witnessed happened independently of Rob.",
+            "src": "Case file — Rob Cooper cleared"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "questions",
+    "title": "Open Questions",
+    "icon": "?",
+    "desc": "Ten priority leads requiring investigation",
+    "items": [
+      {
+        "name": "Who sent the Vanguard list to @theallseeing?",
+        "tag": "PRIORITY 1",
+        "tc": "t-red",
+        "desc": "FIB-level access — organised Vanguard surveillance",
+        "summary": "The anonymous DM sender has insider intelligence on the Vanguard and has been actively monitoring them. Identifying them is the single most important investigative task.",
+        "evidence": [
+          {
+            "lbl": "What We Know",
+            "detail": "They sent a complete named Vanguard member list to @theallseeing on Mar 31. They stated 'this group has been under our watch for some time.' Their use of 'our' implies a group with sustained surveillance capability. @theallseeing responded positively.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          },
+          {
+            "lbl": "Investigative Avenues",
+            "detail": "Who has access to know these six specific names and their Vanguard affiliation? A Vanguard defector; an FIB counterintelligence operation running in parallel; or Echo itself, if Echo and this sender are the same entity.",
+            "src": "Investigative analysis"
+          }
+        ]
+      },
+      {
+        "name": "Who is Harold Sullivan and what is his testimony?",
+        "tag": "PRIORITY 2",
+        "tc": "t-red",
+        "desc": "Echo is amplifying him — 'Every lie echoes'",
+        "summary": "Echo explicitly named Harold Sullivan and said he is 'still talking.' His account contradicts an official narrative. He must be located.",
+        "evidence": [
+          {
+            "lbl": "Echo's Statement",
+            "detail": "'Some voices refuse to rest. Harold Sullivan is still talking. Can you hear him? EVERY LIE ECHOES.' Posted Jun 11.",
+            "src": "@theecho post Jun 11"
+          },
+          {
+            "lbl": "What His Testimony Likely Concerns",
+            "detail": "Echo has focused on FIB black sites, Vanguard operations, civilian disappearances, and the dam. Sullivan's testimony likely relates to one or more of these. 'Every lie echoes' implies his account contradicts a specific official claim.",
+            "src": "Transmission context analysis"
+          }
+        ]
+      },
+      {
+        "name": "What does Daisy Andrews know?",
+        "tag": "PRIORITY 3",
+        "tc": "t-orange",
+        "desc": "Echo asking 'what does she still remember?'",
+        "summary": "Echo is surveilling Daisy Andrews because she holds suppressed knowledge. What event did she witness?",
+        "evidence": [
+          {
+            "lbl": "The Central Question",
+            "detail": "@theassailant's caption implies either that her memory of something has been suppressed, or that she witnessed something and has not yet connected the dots. Echo is watching to see if she acts on it.",
+            "src": "@theassailant post Jun 14 23:38"
+          },
+          {
+            "lbl": "Investigative Approach",
+            "detail": "Daisy Andrews should be approached carefully — if her memory was suppressed or she was threatened into silence, a direct confrontational approach may not work. She should be made to feel safe and protected.",
+            "src": "Investigative recommendation"
+          }
+        ]
+      },
+      {
+        "name": "What does code E3-E6-F-03 mean?",
+        "tag": "PRIORITY 4",
+        "tc": "t-orange",
+        "desc": "Found on Paradigm Agency whiteboard",
+        "summary": "The code on the Paradigm Agency whiteboard has not been deciphered. It may be a grid reference, file number, or Echo operation code.",
+        "evidence": [
+          {
+            "lbl": "The Code",
+            "detail": "E3-E6-F-03. Found on a whiteboard at Paradigm Agency, with the remainder of the board also in code. The format does not immediately match standard FIB file formats.",
+            "src": "Physical evidence — Paradigm Agency"
+          },
+          {
+            "lbl": "Deciphering Approaches",
+            "detail": "Map grid reference: does E3-E6 correspond to a Los Santos grid location? File number: does F-03 reference a document series? Echo operation code: E = Echo, numbers = operations, F = frequency? The remaining coded text on the board may provide context.",
+            "src": "Investigative analysis"
+          }
+        ]
+      },
+      {
+        "name": "Who planted the false narrative in Weazel News?",
+        "tag": "PRIORITY 5",
+        "tc": "t-orange",
+        "desc": "Planted narrative to discredit investigators",
+        "summary": "Someone fed a false story about an FIB investigator to Weazel News. This constitutes attempted interference with the investigation. The source must be identified.",
+        "evidence": [
+          {
+            "lbl": "The Planted Article",
+            "detail": "Weazel News published an article making false misconduct allegations against an FIB investigator who is confirmed clear. The article appears designed to discredit those working this case.",
+            "src": "Weazel News planted article · Case file update"
+          },
+          {
+            "lbl": "Who Benefits?",
+            "detail": "Discrediting investigators working the Echo case benefits the Vanguard. If the false narrative was planted by Vanguard-connected individuals, this is direct evidence they are aware of and actively working against this investigation.",
+            "src": "Investigative analysis"
+          }
+        ]
+      },
+      {
+        "name": "What was in the second theatre broadcast (Jun 14)?",
+        "tag": "PRIORITY 6",
+        "tc": "t-yellow",
+        "desc": "Executed after Echo's live comm signal",
+        "summary": "The second broadcast was confirmed to have taken place on Jun 14. Its contents are not in the case file.",
+        "evidence": [
+          {
+            "lbl": "The Comm Signal and the Broadcast",
+            "detail": "'COMM CHANNEL OPEN. PRIORITY: HIGH. DESTINATION: THEATER. AUTHORIZATION: PENDING.' Posted at 22:38 Jun 14. The second broadcast was confirmed shortly after. The contents likely contain a new Echo transmission.",
+            "src": "@theecho post Jun 14 22:38 · Second broadcast confirmed"
+          }
+        ]
+      },
+      {
+        "name": "Who owns the white/blue car at the CI location?",
+        "tag": "PRIORITY 7",
+        "tc": "t-yellow",
+        "desc": "Car present before Jerry One exploded",
+        "summary": "A white/baby blue car with blue underglow dropped someone off seconds before Jerry One was blown up. The vehicle and its occupant have not been identified.",
+        "evidence": [
+          {
+            "lbl": "Vehicle Description",
+            "detail": "White or baby blue car, blue underglow. Pulled up to the CI meeting location, appeared to drop someone off, then left. Seconds later, the Jerry One helicopter was blown up.",
+            "src": "Incident report — Jerry One"
+          },
+          {
+            "lbl": "Significance",
+            "detail": "The person dropped off may have placed the device that destroyed Jerry One. The car and its occupants must be identified via CCTV, witness accounts, or vehicle registration search.",
+            "src": "Investigative recommendation"
+          }
+        ]
+      },
+      {
+        "name": "Where are Evangeline and Simon Constantine?",
+        "tag": "PRIORITY 8",
+        "tc": "t-yellow",
+        "desc": "Eclipse Hospital organ harvesting allegation",
+        "summary": "@theallseeing alleged organ harvesting by the Constantines at Eclipse Hospital. Their current location and status are unknown.",
+        "evidence": [
+          {
+            "lbl": "The Allegation",
+            "detail": "Organ harvesting at Eclipse Hospital's morgue — MDW incidents 3227 and 4647. The non-public case numbers confirm the allegation came from an insider source.",
+            "src": "@theallseeing post Mar 29 · MDW incidents 3227 and 4647"
+          },
+          {
+            "lbl": "Are They Vanguard-Connected?",
+            "detail": "The allegation was posted alongside the FIB safehouse exposure and CI meeting leak in the same @theallseeing post. If the Constantines are Vanguard-connected, their operation may be a Vanguard enterprise.",
+            "src": "@theallseeing post context"
+          }
+        ]
+      },
+      {
+        "name": "Why is the Mayor following @theallseeing?",
+        "tag": "PRIORITY 9",
+        "tc": "t-yellow",
+        "desc": "Cherry Popper on the follower list",
+        "summary": "The Mayor of Los Santos is a confirmed follower of @theallseeing. Political implications unknown.",
+        "evidence": [
+          {
+            "lbl": "Mayor on Follower List",
+            "detail": "Cherry Popper (@ch3rry) appeared on the follower list FIB compilation. Whether this is passive awareness, active monitoring, or deeper involvement has not been established.",
+            "src": "@theallseeing follower list "
+          }
+        ]
+      },
+      {
+        "name": "Who are Immy Deer, Hopper Rabit, and Red?",
+        "tag": "PRIORITY 10",
+        "tc": "t-yellow",
+        "desc": "Three unidentified Vanguard members",
+        "summary": "Three of the six named Vanguard members have no identified role or affiliation. 'Red' is likely an alias. All three must be identified.",
+        "evidence": [
+          {
+            "lbl": "On the Vanguard List — Identity Unknown",
+            "detail": "Immy Deer, Hopper Rabit, and Red appear on the anonymous Vanguard member list with no position or affiliation listed. They may be civilian operatives, government figures using aliases, or individuals known only by codenames.",
+            "src": "Anonymous DM to @theallseeing Mar 31"
+          },
+          {
+            "lbl": "'Red' — Almost Certainly an Alias",
+            "detail": "A single name with no surname or title. 'Red' is almost certainly a codename for an individual whose real identity is protected.",
+            "src": "Vanguard list analysis"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "conclusions",
+    "title": "Conclusions",
+    "icon": "◑",
+    "desc": "What we know and immediate priorities",
+    "items": [
+      {
+        "name": "What We Know",
+        "tag": "CONFIRMED",
+        "tc": "t-green",
+        "desc": "Eight evidence-backed conclusions",
+        "summary": "Eight conclusions supported by the evidence gathered so far.",
+        "evidence": [
+          {
+            "lbl": "Echo is Organised — Not a Lone Actor",
+            "detail": "Three coordinated Birdy accounts with defined roles. Live operation signals executed in real time. Coordinated occupation of Paradigm Agency. Internal authorisation structure. This is a cell, not an individual.",
+            "src": "Account analysis · @theecho comm signal · Paradigm Agency evidence"
+          },
+          {
+            "lbl": "The Vanguard is Real",
+            "detail": "Independently corroborated by an FIB-level anonymous source who has been actively monitoring them. Named six specific members including sitting FIB Director-level personnel. The Vanguard is not an Echo invention.",
+            "src": "Anonymous DM · Informant corroboration · Vanguard member list"
+          },
+          {
+            "lbl": "Echo Has an Active Insider Source",
+            "detail": "Non-public MDW incident numbers cited. Pre-arrival knowledge at CI meetings. Classified safehouse location exposed. Black site photography obtained. Someone with FIB or law enforcement access is feeding Echo.",
+            "src": "MDW incidents 3227 and 4647 · @theallseeing post analysis"
+          },
+          {
+            "lbl": "Echo Consistently Denies the Dam",
+            "detail": "Across multiple Birdy posts and all transmissions, Echo denies causing the flood. The denial is consistent, specific, and framed as a counter-accusation against the FIB.",
+            "src": "@theecho posts · All three transmission transcripts"
+          },
+          {
+            "lbl": "A Smear Campaign Targeted FIB Investigators",
+            "detail": "A false narrative was planted in Weazel News targeting an FIB investigator who is confirmed clear. Someone — likely Vanguard-connected — is actively working to discredit this investigation.",
+            "src": "Weazel News planted article · Case file update"
+          },
+          {
+            "lbl": "Glizzy McGuire is the Highest-Priority Individual Suspect",
+            "detail": "Previously operated @theallseeing. GM initials at lighthouse. Observed near restricted location. Present at Paradigm scene as first reporter. All circumstantial — but more than any other individual.",
+            "src": "Multiple evidence points — see Glizzy McGuire suspect file"
+          },
+          {
+            "lbl": "Daisy Andrews Likely Holds Key Information",
+            "detail": "Echo is watching her specifically. The extended transmission references buried memories and silenced voices. She probably witnessed something she does not recall or was pressured into silence about.",
+            "src": "@theassailant surveillance · Extended transmission"
+          },
+          {
+            "lbl": "Echo Was Operational on the Night of Jun 14",
+            "detail": "@theassailant posted surveillance photos at 23:16 and 23:38. @theecho executed a theatre broadcast after a live comm signal at 22:38. Echo is active and monitoring targets while under investigation.",
+            "src": "@theassailant posts Jun 14 · @theecho comm signal"
+          }
+        ]
+      },
+      {
+        "name": "Immediate Priorities",
+        "tag": "ACTION REQUIRED",
+        "tc": "t-red",
+        "desc": "Eight actions requiring immediate attention",
+        "summary": "Eight concrete investigative priorities ranked by urgency.",
+        "evidence": [
+          {
+            "lbl": "1. Identify and Interview Glizzy McGuire",
+            "detail": "Determine his current connection to Echo operations. Is he running it, part of it, or being framed? Approach with documented evidence — the @theallseeing history and the lighthouse note.",
+            "src": "Priority action 1"
+          },
+          {
+            "lbl": "2. Locate Daisy Andrews",
+            "detail": "Interview Daisy Andrews about what she witnessed or experienced. She must be approached carefully and made to feel safe. Her testimony may be the most critical single piece of evidence in this case.",
+            "src": "Priority action 2"
+          },
+          {
+            "lbl": "3. Identify Harold Sullivan",
+            "detail": "Find Harold Sullivan and secure his testimony. Echo says he is 'still talking' — he is accessible but has not been heard by investigators.",
+            "src": "Priority action 3"
+          },
+          {
+            "lbl": "4. Identify the Anonymous Vanguard List Sender",
+            "detail": "The most important unknown in the case. Who has been monitoring the Vanguard? A Vanguard defector, a parallel investigation, or Echo itself?",
+            "src": "Priority action 4"
+          },
+          {
+            "lbl": "5. Decode E3-E6-F-03",
+            "detail": "The whiteboard code at Paradigm Agency. Cross-reference with map grids, FIB file systems, and the coded remainder of the whiteboard.",
+            "src": "Priority action 5"
+          },
+          {
+            "lbl": "6. Identify the White/Blue Car at the CI Location",
+            "detail": "The vehicle present seconds before Jerry One was blown up. CCTV, registration search, witness accounts.",
+            "src": "Priority action 6"
+          },
+          {
+            "lbl": "7. Investigate the Constantine Allegation",
+            "detail": "MDW incidents 3227 and 4647. Eclipse Hospital. Where are Evangeline and Simon Constantine now?",
+            "src": "Priority action 7"
+          },
+          {
+            "lbl": "8. Determine Who Planted the False Narrative",
+            "detail": "Trace the source of the false narrative fed to Weazel News. If Vanguard-connected, this is evidence of active interference with the investigation.",
+            "src": "Priority action 8"
+          }
+        ]
+      }
+    ]
+  }
+];
+
+let activeSec = 0, activeItem = null;
+
+function renderNav(){
+  document.getElementById('nav').innerHTML =
+    '<div class="nav-lbl">Sections</div>' +
+    DATA.map((s,i) =>
+      `<div class="ni${i===activeSec?' active':''}" onclick="selSec(${i})">` +
+      `<span class="ni-icon">${s.icon}</span>` +
+      `<span class="ni-title">${s.title}</span>` +
+      `<span class="ni-count">${s.items.length}</span></div>`
+    ).join('');
+}
+
+function renderList(){
+  const s = DATA[activeSec];
+  document.getElementById('listPanel').innerHTML =
+    `<div class="list-hdr"><div class="list-hdr-title">${s.title}</div><div class="list-hdr-sub">${s.desc}</div></div>` +
+    s.items.map((item,i) =>
+      `<div class="ic${activeItem===i?' active':''}" onclick="selItem(${i})">` +
+      `<div class="ic-row"><span class="tag ${item.tc}">${item.tag}</span><span class="ic-name">${item.name}</span></div>` +
+      `<div class="ic-desc">${item.desc}</div>` +
+      `<div class="ic-meta">${item.evidence.length} evidence point${item.evidence.length!==1?'s':''}</div></div>`
+    ).join('');
+}
+
+function renderEvidence(){
+  const el = document.getElementById('evPanel');
+  if(activeItem===null){
+    el.innerHTML='<div class="ev-empty"><div class="ev-empty-icon">◎</div><div class="ev-empty-txt">Select an item to view evidence</div></div>';
+    return;
+  }
+  const item = DATA[activeSec].items[activeItem];
+  const evHtml = item.evidence.map(e =>
+    `<div class="ev-item"><div class="ev-item-lbl">${e.lbl}</div>` +
+    `<div class="ev-item-detail">${e.detail}</div>` +
+    `<div class="ev-item-src">${e.src}</div></div>`
+  ).join('');
+  el.innerHTML =
+    `<div class="ev-hdr"><div class="ev-eyebrow">Evidence — ${DATA[activeSec].title}</div>` +
+    `<div class="ev-title">${item.name}</div>` +
+    `<div class="ev-summary">${item.summary}</div></div>` +
+    `<div class="ev-body"><div class="ev-sec-lbl">Supporting Evidence (${item.evidence.length} point${item.evidence.length!==1?'s':''})</div>${evHtml}</div>`;
+}
+
+function selSec(i){activeSec=i;activeItem=null;renderNav();renderList();renderEvidence();}
+function selItem(i){
+  activeItem=i;renderList();renderEvidence();
+  if(window.innerWidth<=800) document.getElementById('evPanel').scrollIntoView({behavior:'smooth'});
+}
+
+renderNav();renderList();renderEvidence();
+</script>
+</body>
+</html>
